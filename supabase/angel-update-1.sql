@@ -1,7 +1,7 @@
 -- ============================================================
--- ANGEL — Atualização nº 1 do banco de dados
+-- ANGEL — Atualização nº 1 (VERSÃO CORRIGIDA)
 -- Anjos & Protegidos · verificação · comentários · denúncias
--- Rode este script no SQL Editor do Supabase (Run / Ctrl+Enter)
+-- Pode ser rodada mais de uma vez sem causar erros.
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -26,19 +26,20 @@ alter table public.perfis add column if not exists status_verificacao text
   check (status_verificacao in ('comum', 'pendente', 'verificado'));
 alter table public.perfis add column if not exists ativo boolean not null default true;
 
--- Anjos de demonstração que já eram verificados ganham o status novo
 update public.perfis
   set status_verificacao = 'verificado'
   where papel = 'anjo' and verificado = true;
 
 -- ------------------------------------------------------------
 -- 3. COMENTÁRIOS NAS AVALIAÇÕES
+--    (CORREÇÃO: conexao_id passa a ser opcional, permitindo
+--    avaliações de demonstração e futuras avaliações avulsas)
 -- ------------------------------------------------------------
 alter table public.avaliacoes add column if not exists comentario text;
+alter table public.avaliacoes alter column conexao_id drop not null;
 
 -- ------------------------------------------------------------
--- 4. DENÚNCIAS — proteção dos Protegidos contra mal-intencionados
---    Denúncias graves aparecem com destaque no painel admin
+-- 4. DENÚNCIAS — proteção dos Protegidos
 -- ------------------------------------------------------------
 create table if not exists public.denuncias (
   id              uuid primary key default gen_random_uuid(),
@@ -55,31 +56,36 @@ create index if not exists idx_denuncias_status on public.denuncias (status, cri
 
 -- ------------------------------------------------------------
 -- 5. POLÍTICAS RLS (fase de protótipo — abertas)
---    ATENÇÃO: antes do lançamento real, ativar Supabase Auth e
---    restringir, principalmente UPDATE em perfis e leitura de
---    nome_real/denúncias (que devem ser exclusivas do admin).
 -- ------------------------------------------------------------
 alter table public.denuncias enable row level security;
+
+drop policy if exists "prototipo_leitura_denuncias"  on public.denuncias;
+drop policy if exists "prototipo_insercao_denuncias" on public.denuncias;
+drop policy if exists "prototipo_update_denuncias"   on public.denuncias;
+drop policy if exists "prototipo_update_perfis"      on public.perfis;
 
 create policy "prototipo_leitura_denuncias"  on public.denuncias for select using (true);
 create policy "prototipo_insercao_denuncias" on public.denuncias for insert with check (true);
 create policy "prototipo_update_denuncias"   on public.denuncias for update using (true);
-
--- O painel admin precisa atualizar perfis (aprovar selo / excluir anjo)
-create policy "prototipo_update_perfis" on public.perfis for update using (true);
+create policy "prototipo_update_perfis"      on public.perfis    for update using (true);
 
 -- ------------------------------------------------------------
 -- 6. AVALIAÇÕES DE DEMONSTRAÇÃO (com comentários)
---    Para os cards já nascerem com prova social
+--    Protegida fictícia "Brisa Demo" avalia cada Anjo uma vez.
+--    Protegido contra duplicação se o script rodar de novo.
 -- ------------------------------------------------------------
-with anjos as (select id, codinome from public.perfis where papel = 'anjo'),
-protegida_demo as (
-  insert into public.perfis (codinome, papel, temas)
-  values ('Brisa Demo', 'protegido', array['Ansiedade'])
-  returning id
-)
+insert into public.perfis (codinome, papel, temas)
+select 'Brisa Demo', 'protegido', array['Ansiedade']
+where not exists (
+  select 1 from public.perfis where codinome = 'Brisa Demo' and papel = 'protegido'
+);
+
 insert into public.avaliacoes (avaliador_id, avaliado_id, nota, tags, comentario)
-select p.id, a.id, 5, array['Acolhedor(a)','Soube ouvir'],
+select
+  p.id,
+  a.id,
+  5,
+  array['Acolhedor(a)', 'Soube ouvir'],
   case a.codinome
     when 'Luz do Cerrado'   then 'Me senti ouvida pela primeira vez em meses. Muito atenciosa.'
     when 'Farol 22'         then 'Ele passou pelo que eu passo. Conversar com ele me deu esperança.'
@@ -87,4 +93,11 @@ select p.id, a.id, 5, array['Acolhedor(a)','Soube ouvir'],
     when 'Dr. Horizonte'    then 'Explicou meu diagnóstico melhor que qualquer consulta que já tive.'
     else 'Uma conversa leve que me fez bem. Obrigada.'
   end
-from anjos a, protegida_demo p;
+from public.perfis a
+join public.perfis p
+  on p.codinome = 'Brisa Demo' and p.papel = 'protegido'
+where a.papel = 'anjo'
+  and not exists (
+    select 1 from public.avaliacoes av
+    where av.avaliado_id = a.id and av.avaliador_id = p.id
+  );
