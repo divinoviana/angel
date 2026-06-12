@@ -21,6 +21,10 @@ const FONT_CSS = `
 @keyframes slideRight { to { opacity: 0; transform: translateX(120%) rotate(8deg); } }
 @keyframes matchPop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes bubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pontinho {
+  0%, 60%, 100% { transform: translateY(0); opacity: .4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 `;
 
@@ -385,6 +389,19 @@ function TelaMatch({ usuario, anjo, irChat, criandoConexao, voltar }) {
   );
 }
 
+function BalaoDigitando({ anjo }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, alignSelf: "flex-start", animation: "bubbleIn .25s ease" }}>
+      <Halo size={26} cor={anjo.cor} label={anjo.codinome[0]} glow={false} />
+      <div style={{ background: T.card, borderRadius: "18px 18px 18px 4px", padding: "13px 16px", boxShadow: "0 2px 8px rgba(43,38,64,0.07)", display: "flex", gap: 4 }}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: T.inkSoft, display: "inline-block", animation: `pontinho 1.2s ease-in-out ${i * 0.18}s infinite` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
   const RESPOSTAS = [
     "Entendo. Obrigada por confiar isso a mim. Quer me contar há quanto tempo você vem se sentindo assim?",
@@ -394,6 +411,7 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
   const [msgs, setMsgs] = useState([]);
   const [texto, setTexto] = useState("");
   const [passo, setPasso] = useState(0);
+  const [digitando, setDigitando] = useState(false);
   const [erro, setErro] = useState(null);
   const fimRef = useRef(null);
 
@@ -403,14 +421,20 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
         const dados = await sb(`mensagens?conexao_id=eq.${conexaoId}&select=*&order=criado_em.asc`);
         if (dados.length === 0) {
           const inicial = "Oi! Que bom que você veio. Pode ficar à vontade — me conte o que quiser, no seu ritmo. 💛";
-          const salvas = await sb("mensagens", { method: "POST", body: JSON.stringify({ conexao_id: conexaoId, remetente_id: anjo.id, texto: inicial }) });
-          setMsgs(salvas);
+          setDigitando(true);
+          setTimeout(async () => {
+            try {
+              const salvas = await sb("mensagens", { method: "POST", body: JSON.stringify({ conexao_id: conexaoId, remetente_id: anjo.id, texto: inicial }) });
+              setDigitando(false);
+              setMsgs(salvas);
+            } catch (e) { setDigitando(false); setErro(e.message); }
+          }, 1600);
         } else setMsgs(dados);
       } catch (e) { setErro(e.message); }
     })();
   }, [conexaoId]);
 
-  useEffect(() => { fimRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  useEffect(() => { fimRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, digitando]);
 
   const enviar = async () => {
     if (!texto.trim()) return;
@@ -422,12 +446,15 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
       if (passo < RESPOSTAS.length) {
         const r = RESPOSTAS[passo];
         setPasso((p) => p + 1);
+        setTimeout(() => setDigitando(true), 700);
+        const tempoDigitando = 1800 + Math.random() * 1500;
         setTimeout(async () => {
           try {
             const resposta = await sb("mensagens", { method: "POST", body: JSON.stringify({ conexao_id: conexaoId, remetente_id: anjo.id, texto: r }) });
+            setDigitando(false);
             setMsgs((m) => [...m, ...resposta]);
-          } catch (e) { setErro(e.message); }
-        }, 900);
+          } catch (e) { setDigitando(false); setErro(e.message); }
+        }, 700 + tempoDigitando);
       }
     } catch (e) { setErro(e.message); }
   };
@@ -459,6 +486,7 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
             </div>
           );
         })}
+        {digitando && <BalaoDigitando anjo={anjo} />}
         <div ref={fimRef} />
       </div>
 
