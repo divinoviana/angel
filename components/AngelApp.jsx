@@ -75,6 +75,19 @@ function Campo({ rotulo, valor, mudar, placeholder, opcional, multiline }) {
   );
 }
 
+function BotaoVoltar({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Voltar"
+      className="angel-body"
+      style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, border: "1.5px solid #E5DFF2", background: T.card, color: T.inkSoft, borderRadius: 999, padding: "7px 14px", fontSize: 13, fontWeight: 800, cursor: "pointer", marginBottom: 10 }}
+    >
+      ← Voltar
+    </button>
+  );
+}
+
 function BarraSOS() {
   return (
     <div className="angel-body" style={{ textAlign: "center", fontSize: 12, color: T.inkSoft, padding: "10px 16px" }}>
@@ -114,14 +127,15 @@ function TelaBoasVindas({ avancar }) {
   );
 }
 
-function TelaPapel({ escolher }) {
+function TelaPapel({ escolher, voltar }) {
   const opcoes = [
     { papel: "protegido", titulo: "Preciso de apoio", desc: "Seja um(a) Protegido(a): converse anonimamente com Anjos voluntários — psicólogos, médicos, pessoas que já viveram o que você vive.", cor: T.lilac, icone: "🕊️" },
     { papel: "anjo", titulo: "Quero ser um Anjo", desc: "Ofereça escuta, experiência ou orientação profissional. Profissionais podem solicitar o selo de verificação ✓.", cor: T.trust, icone: "🤲" },
   ];
   return (
     <div style={{ padding: 28, height: "100%", display: "flex", flexDirection: "column", animation: "cardIn .4s ease" }}>
-      <h2 className="angel-display" style={{ fontSize: 28, color: T.ink, fontWeight: 600, margin: "12px 0 6px" }}>
+      <BotaoVoltar onClick={voltar} />
+      <h2 className="angel-display" style={{ fontSize: 28, color: T.ink, fontWeight: 600, margin: "2px 0 6px" }}>
         Como você chega até aqui?
       </h2>
       <p className="angel-body" style={{ color: T.inkSoft, fontSize: 14, marginBottom: 20 }}>
@@ -141,13 +155,14 @@ function TelaPapel({ escolher }) {
   );
 }
 
-function TelaCadastroProtegido({ concluir, salvando, erro }) {
+function TelaCadastroProtegido({ concluir, salvando, erro, voltar }) {
   const [codinome, setCodinome] = useState(CODINOMES[Math.floor(Math.random() * CODINOMES.length)]);
   const [temas, setTemas] = useState([]);
   const alternar = (t) => setTemas((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   return (
     <div style={{ padding: 28, height: "100%", display: "flex", flexDirection: "column", animation: "cardIn .4s ease", overflowY: "auto" }}>
-      <h2 className="angel-display" style={{ fontSize: 26, color: T.ink, fontWeight: 600, margin: "8px 0 4px" }}>
+      <BotaoVoltar onClick={voltar} />
+      <h2 className="angel-display" style={{ fontSize: 26, color: T.ink, fontWeight: 600, margin: "0 0 4px" }}>
         Sua identidade é sua escolha
       </h2>
       <p className="angel-body" style={{ color: T.inkSoft, fontSize: 14, marginBottom: 18, lineHeight: 1.5 }}>
@@ -178,7 +193,7 @@ function TelaCadastroProtegido({ concluir, salvando, erro }) {
   );
 }
 
-function TelaCadastroAnjo({ concluir, salvando, erro }) {
+function TelaCadastroAnjo({ concluir, salvando, erro, voltar }) {
   const [codinome, setCodinome] = useState("");
   const [nomeReal, setNomeReal] = useState("");
   const [profissao, setProfissao] = useState("");
@@ -189,7 +204,8 @@ function TelaCadastroAnjo({ concluir, salvando, erro }) {
   const valido = codinome.trim() && nomeReal.trim() && profissao.trim() && bio.trim() && temas.length > 0;
   return (
     <div style={{ padding: 28, height: "100%", display: "flex", flexDirection: "column", animation: "cardIn .4s ease", overflowY: "auto" }}>
-      <h2 className="angel-display" style={{ fontSize: 26, color: T.ink, fontWeight: 600, margin: "8px 0 4px" }}>
+      <BotaoVoltar onClick={voltar} />
+      <h2 className="angel-display" style={{ fontSize: 26, color: T.ink, fontWeight: 600, margin: "0 0 4px" }}>
         Torne-se um Anjo 🤲
       </h2>
       <p className="angel-body" style={{ color: T.inkSoft, fontSize: 13.5, marginBottom: 16, lineHeight: 1.5 }}>
@@ -343,7 +359,7 @@ function TelaMatching({ usuario, anjos, stats, carregando, erro, aoMatch }) {
   );
 }
 
-function TelaMatch({ usuario, anjo, irChat, criandoConexao }) {
+function TelaMatch({ usuario, anjo, irChat, criandoConexao, voltar }) {
   return (
     <div style={{ padding: 28, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", animation: "matchPop .5s ease" }}>
       <div style={{ display: "flex", alignItems: "center" }}>
@@ -361,12 +377,15 @@ function TelaMatch({ usuario, anjo, irChat, criandoConexao }) {
         <BotaoPrimario cor={T.halo} onClick={irChat} disabled={criandoConexao}>
           {criandoConexao ? "Registrando conexão…" : "Iniciar conversa"}
         </BotaoPrimario>
+        <button onClick={voltar} className="angel-body" style={{ width: "100%", marginTop: 10, border: "1.5px solid #E5DFF2", background: "transparent", color: T.inkSoft, borderRadius: 16, padding: "13px", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+          ← Voltar aos Anjos
+        </button>
       </div>
     </div>
   );
 }
 
-function TelaChat({ usuario, anjo, conexaoId, finalizar }) {
+function TelaChat({ usuario, anjo, conexaoId, finalizar, voltar }) {
   const RESPOSTAS = [
     "Entendo. Obrigada por confiar isso a mim. Quer me contar há quanto tempo você vem se sentindo assim?",
     "Faz sentido se sentir assim. Você não está sozinho(a) nessa. Que tal combinarmos de conversar um pouco todos os dias esta semana?",
@@ -415,7 +434,8 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar }) {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", background: T.card, borderBottom: "1.5px solid #EBE5F6" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 14px 14px 10px", background: T.card, borderBottom: "1.5px solid #EBE5F6" }}>
+        <button onClick={voltar} aria-label="Voltar" style={{ border: "none", background: "transparent", fontSize: 22, color: T.inkSoft, cursor: "pointer", padding: "4px 6px" }}>←</button>
         <Halo size={44} cor={anjo.cor} label={anjo.codinome[0]} glow={false} />
         <div style={{ flex: 1 }}>
           <div className="angel-body" style={{ fontWeight: 800, color: T.ink, fontSize: 15 }}>{anjo.codinome}</div>
@@ -450,7 +470,7 @@ function TelaChat({ usuario, anjo, conexaoId, finalizar }) {
   );
 }
 
-function TelaAvaliacao({ usuario, anjo, conexaoId, concluir }) {
+function TelaAvaliacao({ usuario, anjo, conexaoId, concluir, voltar }) {
   const [nota, setNota] = useState(0);
   const [tags, setTags] = useState([]);
   const [comentario, setComentario] = useState("");
@@ -475,7 +495,8 @@ function TelaAvaliacao({ usuario, anjo, conexaoId, concluir }) {
 
   return (
     <div style={{ padding: 28, height: "100%", display: "flex", flexDirection: "column", animation: "cardIn .4s ease", overflowY: "auto" }}>
-      <div style={{ textAlign: "center", marginTop: 4 }}>
+      <BotaoVoltar onClick={voltar} />
+      <div style={{ textAlign: "center", marginTop: 0 }}>
         <Halo size={70} cor={anjo.cor} label={anjo.codinome[0]} glow={false} />
         <h2 className="angel-display" style={{ fontSize: 23, color: T.ink, fontWeight: 600, marginTop: 12 }}>
           Como foi conversar com {anjo.codinome}?
@@ -677,21 +698,21 @@ export default function AngelApp() {
       <div style={{ width: "100%", maxWidth: 400, height: "min(820px, 94vh)", background: T.bg, borderRadius: 32, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 24px 60px rgba(43,38,64,0.25)", border: "8px solid #2B2640" }}>
         <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
           {tela === "boasvindas" && <TelaBoasVindas avancar={() => setTela("papel")} />}
-          {tela === "papel" && <TelaPapel escolher={(p) => setTela(p === "anjo" ? "cadastroAnjo" : "cadastroProtegido")} />}
-          {tela === "cadastroProtegido" && <TelaCadastroProtegido concluir={cadastrarProtegido} salvando={salvando} erro={erro} />}
-          {tela === "cadastroAnjo" && <TelaCadastroAnjo concluir={cadastrarAnjo} salvando={salvando} erro={erro} />}
+          {tela === "papel" && <TelaPapel voltar={() => setTela("boasvindas")} escolher={(p) => setTela(p === "anjo" ? "cadastroAnjo" : "cadastroProtegido")} />}
+          {tela === "cadastroProtegido" && <TelaCadastroProtegido voltar={() => setTela("papel")} concluir={cadastrarProtegido} salvando={salvando} erro={erro} />}
+          {tela === "cadastroAnjo" && <TelaCadastroAnjo voltar={() => setTela("papel")} concluir={cadastrarAnjo} salvando={salvando} erro={erro} />}
           {tela === "anjoStatus" && usuario && <TelaAnjoStatus anjo={usuario} />}
           {tela === "matching" && usuario && (
             <TelaMatching usuario={usuario} anjos={anjos} stats={stats} carregando={carregando} erro={erro} aoMatch={aoMatch} />
           )}
           {tela === "match" && anjoAtual && (
-            <TelaMatch usuario={usuario} anjo={anjoAtual} criandoConexao={criandoConexao} irChat={() => setTela("chat")} />
+            <TelaMatch usuario={usuario} anjo={anjoAtual} criandoConexao={criandoConexao} irChat={() => setTela("chat")} voltar={() => setTela("matching")} />
           )}
           {tela === "chat" && anjoAtual && conexaoId && (
-            <TelaChat usuario={usuario} anjo={anjoAtual} conexaoId={conexaoId} finalizar={() => setTela("avaliacao")} />
+            <TelaChat usuario={usuario} anjo={anjoAtual} conexaoId={conexaoId} finalizar={() => setTela("avaliacao")} voltar={() => setTela("matching")} />
           )}
           {tela === "avaliacao" && anjoAtual && conexaoId && (
-            <TelaAvaliacao usuario={usuario} anjo={anjoAtual} conexaoId={conexaoId} concluir={(d) => { setDenunciaEnviada(!!d); setTela("perfil"); }} />
+            <TelaAvaliacao usuario={usuario} anjo={anjoAtual} conexaoId={conexaoId} concluir={(d) => { setDenunciaEnviada(!!d); setTela("perfil"); }} voltar={() => setTela("chat")} />
           )}
           {tela === "perfil" && usuario && <TelaPerfil usuario={usuario} anjo={anjoAtual} denunciaEnviada={denunciaEnviada} />}
         </div>
