@@ -82,6 +82,10 @@ export default function AdminPanel() {
     await sb(`perfis?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ ativo: true }) });
     carregar();
   };
+  const excluirAnjoDireto = async (id) => {
+    await sb(`perfis?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ ativo: false }) });
+    carregar();
+  };
 
   if (!logado) {
     return (
@@ -211,6 +215,43 @@ export default function AdminPanel() {
                 </div>
               ))}
             </div>
+
+            <Cartao>
+              <div style={{ fontSize: 13, fontWeight: 800, color: T.ink, marginBottom: 8 }}>
+                Todos os Anjos ativos ({anjosAtivos.length})
+              </div>
+              {anjosAtivos.length === 0 && (
+                <p style={{ fontSize: 13, color: T.inkSoft }}>Nenhum Anjo ativo.</p>
+              )}
+              {anjosAtivos.map((p) => (
+                <div key={p.id} style={{ borderBottom: "1px solid #F0EBF8", padding: "10px 0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14.5, fontWeight: 800, color: T.ink }}>{p.codinome}</span>
+                    {p.status_verificacao === "verificado" && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#fff", background: T.trust, borderRadius: 999, padding: "2px 9px" }}>✓ verificado</span>
+                    )}
+                    {p.status_verificacao === "pendente" && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#9A6A1E", background: "#FBF1DF", borderRadius: 999, padding: "2px 9px" }}>⏳ pendente</span>
+                    )}
+                    {p.status_verificacao === "comum" && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: T.inkSoft, background: T.lilacSoft, borderRadius: 999, padding: "2px 9px" }}>pessoa comum</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: T.inkSoft, marginTop: 3, lineHeight: 1.5 }}>
+                    Nome real (sigiloso): <strong>{p.nome_real || "não informado"}</strong>
+                    {p.profissao ? <> · {p.profissao}</> : null}
+                    {p.registro_profissional ? <> · Registro: {p.registro_profissional}</> : null}
+                    <br />Cadastro: {new Date(p.criado_em).toLocaleString("pt-BR")}
+                  </div>
+                  <div>
+                    {p.status_verificacao === "pendente" && (
+                      <BotaoAcao pequeno cor={T.trust} onClick={() => aprovarSelo(p.id)}>Aprovar selo ✓</BotaoAcao>
+                    )}
+                    <BotaoAcao pequeno cor={T.danger} onClick={() => excluirAnjoDireto(p.id)}>Excluir Anjo</BotaoAcao>
+                  </div>
+                </div>
+              ))}
+            </Cartao>
 
             {anjosExcluidos.length > 0 && (
               <Cartao>
